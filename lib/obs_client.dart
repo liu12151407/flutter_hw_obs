@@ -8,14 +8,13 @@ import 'package:path/path.dart' as path;
 import 'utils.dart';
 
 class OBSClient {
-
   static String? ak;
   static String? sk;
   static String? bucketName;
   static String? domain;
 
-  static void init(String ak, String sk, String domain, String bucketName){
-    OBSClient.ak  = ak;
+  static void init(String ak, String sk, String domain, String bucketName) {
+    OBSClient.ak = ak;
     OBSClient.sk = sk;
     OBSClient.domain = domain;
     OBSClient.bucketName = bucketName;
@@ -28,34 +27,38 @@ class OBSClient {
     return dio;
   }
 
-
-  static Future<OBSResponse?> putObject(String objectName, List<int> data,{String xObsAcl = "public-read"}) async{
+  static Future<OBSResponse?> putObject(String objectName, List<int> data,
+      {String xObsAcl = "public-read"}) async {
     String contentMD5 = data.toMD5Base64();
     int size = data.length;
     var stream = Stream.fromIterable(data.map((e) => [e]));
-    OBSResponse? obsResponse = await put(objectName, stream, contentMD5, size, xObsAcl: xObsAcl);
+    OBSResponse? obsResponse =
+        await put(objectName, stream, contentMD5, size, xObsAcl: xObsAcl);
     return obsResponse;
   }
 
-
-  static Future<OBSResponse?> putString(String objectName, String content,{String xObsAcl = "public-read"}) async{
+  static Future<OBSResponse?> putString(String objectName, String content,
+      {String xObsAcl = "public-read"}) async {
     var contentMD5 = content.toMD5Base64();
     var size = content.length;
-    OBSResponse? obsResponse = await put(objectName, content, contentMD5, size, xObsAcl: xObsAcl);
+    OBSResponse? obsResponse =
+        await put(objectName, content, contentMD5, size, xObsAcl: xObsAcl);
     return obsResponse;
   }
 
-
-  static Future<OBSResponse?> putFile(String objectName, File file,{String xObsAcl = "public-read"}) async{
+  static Future<OBSResponse?> putFile(String objectName, File file,
+      {String xObsAcl = "public-read"}) async {
     var contentMD5 = await getFileMd5Base64(file);
     var stream = file.openRead();
-    OBSResponse? obsResponse = await put(objectName, stream, contentMD5, await file.length() xObsAcl: xObsAcl);
+    OBSResponse? obsResponse = await put(
+        objectName, stream, contentMD5, await file.length(),
+        xObsAcl: xObsAcl);
     return obsResponse;
   }
 
-
-  static Future<OBSResponse?> put(String objectName, data , String md5, int size, {String xObsAcl = "public-read"}) async{
-    if(objectName.startsWith("/")){
+  static Future<OBSResponse?> put(String objectName, data, String md5, int size,
+      {String xObsAcl = "public-read"}) async {
+    if (objectName.startsWith("/")) {
       objectName = objectName.substring(1);
     }
     String url = "$domain/$objectName";
@@ -68,7 +71,8 @@ class OBSClient {
     headers["Content-MD5"] = contentMD5;
     headers["Date"] = date;
     headers["x-obs-acl"] = xObsAcl;
-    headers["Authorization"] = _sign("PUT", contentMD5, contentType, date, "x-obs-acl:$xObsAcl", "/$bucketName/$objectName");
+    headers["Authorization"] = _sign("PUT", contentMD5, contentType, date,
+        "x-obs-acl:$xObsAcl", "/$bucketName/$objectName");
 
     Options options = Options(headers: headers, contentType: contentType);
 
@@ -85,7 +89,9 @@ class OBSClient {
     return obsResponse;
   }
 
-  static Future<OBSResponse?> putFileWithPath(String objectName, String filePath,{String xObsAcl = "public-read"}) async{
+  static Future<OBSResponse?> putFileWithPath(
+      String objectName, String filePath,
+      {String xObsAcl = "public-read"}) async {
     return putFile(objectName, File(filePath));
   }
 
